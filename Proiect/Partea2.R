@@ -45,57 +45,67 @@ dateProiect <- dateProiect %>%
 dim(dateProiect) # 37 variabile pastrate in analiza ! poate mai modific
 View(dateProiect)
 
-# copie pt date + filtru
-dateProiectCopie <- dateProiect %>% 
-  filter(!is.na(Country)) %>% 
-  filter(!is.na(Employment))
-dim(dateProiectCopie)
+# copie
+dateProiectCopie <- dateProiect
 
+# Regresie Logistica --------------------------------------- curatam + target
 
-# Selectare tari
-View(table(dateProiectCopi$Country))
-tariProiect <- c("United States", "India", "Romania","France","United Kingdom","Spain","Sweden")
-length(tariProiect) #7
+# Vom folosi in modelul de regresie liniara variabilele urmatoare:
+# Age1, YearsCodePf1, EdLevel1, WorkWeekHrs1, DevType1, Gender1
 
+# densitate pe varsta
+#sursa <- "Stackoverflow"
 
-dateProiectFiltrate <- dateProiectCopie %>% 
-  filter (Country %in% tariProiect)
-dim(dateProiectFiltrate)
-
-
-# Analiza corespondentelor ---------
-
-table(dateProiectFiltrate$Country)
-attach(dateProiectFiltrate)
+#dateProiectCopie %>%
+#  filter(!is.na(Age)) %>% # & Age<75 & Age>25)%>%
+#  ggplot(aes(Age)) +
+# geom_density(color="white", fill="steelblue", adjust=5) +
+#  labs(x = "Age",
+#      y = "Frecventa",
+#     caption = sursa) +
+#  ggtitle("Varsta") + theme_gray(base_size = 12)
 
 
 
-#install.packages("ggplot2")
-#library(ggplot2)
-dateProiectFiltrate  %>%
-  filter(!is.na(Employment)) %>% 
-  group_by(Employment, Country) %>% 
-  dplyr::summarise(n=n())  %>% 
-  mutate(freq = n / sum(n)) %>% 
-  ggplot()+
-  geom_col(aes(x=reorder(Country,n),y=n, fill=Employment, position="fill"))+
-  scale_fill_brewer(palette="Dark2")
+# grupare varsta Age -> Age1
 
-# vreau sa vad statutul de angajare pe cele 8 tari
-modelAnalizaCorespondente <- table(Employment, Country)
-modelAnalizaCorspondente #tabelul de contingenta
+table(dateProiectCopie$Age)
+
+dateProiectCopie <- dateProiectCopie %>% 
+  filter(!is.na(YearsCodePro)) %>%
+  mutate(Age1 = as.factor(case_when(Age <= 25 ~ "18-25",
+                                    Age <= 30 ~ "26-30",
+                                    Age <= 35 ~ "31-35",
+                                    Age <= 40 ~ "36-40",
+                                    Age <= 45 ~ "41-45",
+                                    Age > 45  ~ "45+")))
+table(dateProiectCopie$Age)
+
+# grupare varsta YearsCodePro -> YearsCodePro1
+table(dateProiectCopie$YearsCodePro)
+
+dateProiectCopie <- dateProiectCopie %>% 
+  filter(!is.na(YearsCodePro)) %>%
+  mutate(YearsCodePro1 = as.factor(case_when(YearsCodePro <= 5  ~ "0-5",
+                                           YearsCodePro <= 10 ~ "6-10",
+                                           YearsCodePro <= 15 ~ "11-15",
+                                           YearsCodePro <= 20 ~ "16-20",
+                                           YearsCodePro > 20  ~ "21+")))
+table(dateProiectCopie$YearsCodePro1)
+table(dateProiectCopie$YearsCodePro, dateProiectCopie$YearsCodePro1)
 
 
+# grupare nivel de studii EdLevel -> EdLevel1
+table(dateProiectCopie$EdLevel)
 
-#Valididate model
-chisq.test(modelAnalizaCorespondente)
+# Transformam valorile de pe variabila categoriala EdLevel folosind urmatoarele codificari:
+
+dateProiectCopie$EdLevel1 <- factor(dateProiectCopie$EdLevel, labels = c("UNI", "UNI","NE","UNI","UNI", "SCH","UNI","SCH","SCH"))
+table(dateProiectCopie$EdLevel1)
+table(dateProiectCopie$EdLevel, dateProiectCopie$EdLevel1)
 
 
+# grupare ore lucrate WorkWeekHrs -> WorkWeekHrs1
+table(Data2020t$WorkWeekHrs)
 
-#Aplic functia ca pentru analiza corespondentelor
-# install.packages("ca")
-# library(ca)
-corespondenteEmployment <- ca(modelAnalizaCorespondente)
-summary(corespondenteEmployment)
-windows()
-plot(corespondenteEmployment, lines=c(FALSE,F))
+
